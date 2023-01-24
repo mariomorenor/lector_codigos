@@ -1,0 +1,23 @@
+{
+  "name": "lector_codigos",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/app.js",
+  "scripts": {
+    "dev": "electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^22.0.3",
+    "electron-reload": "2.0.0-alpha.1"
+  },
+  "dependencies": {
+    "bootstrap": "^5.2.3",
+    "jquery": "^3.6.3",
+    "sequelize": "^6.28.0",
+    "socket.io-client": "^4.5.4",
+    "sqlite3": "^5.1.4"
+  }
+}
