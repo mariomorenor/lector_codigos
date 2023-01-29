@@ -1,4 +1,4 @@
-const { Sequelize, DataTypes } = require('sequelize');
+const { Sequelize, DataTypes, Op } = require('sequelize');
 const { app } = require("electron");
 const path = require('path');
 
@@ -13,10 +13,13 @@ const Ingresos = sequelize.define("ingresos", {
   apellidos: DataTypes.STRING,
   cedula: DataTypes.STRING,
   email: DataTypes.STRING,
+  usuario_id: DataTypes.INTEGER
 });
 
 Ingresos.sync();
 
 module.exports = {
-  Ingresos
+  Ingresos,
+  Op,
+  sequelize
 }

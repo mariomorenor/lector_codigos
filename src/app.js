@@ -1,37 +1,27 @@
 const { app, BrowserWindow, net } = require('electron');
-const path = require("path")
+const path = require("path");
+require("./express.js")
 
 const models = require("./db");
+const odoo = require("./odoo-api.js")
 
-const Estudiantes = [];
+var Estudiantes = [];
 
-// REALIZAR CONSULTA DE INFORMACIÓN Y LLENAR LA VARIABLE ESTUDIANTES
-function obtener_estudiantes() {
-    // Datos de prueba
-    Estudiantes.push({
-        nombres:"JONATHAN MARIO",
-        apellidos:"MORENO RIVERA",
-        cedula:"2300349640",
-        email:"jmmorenor@pucesd.edu.ec"
-    });
-    Estudiantes.push({
-        nombres:"RICARDO ALEXANDER",
-        apellidos:"MORÁN CHIMBO",
-        cedula:"2300349641",
-        email:"redes@pucesd.edu.ec"
-    });
-}
-
-obtener_estudiantes();
-
-const electronReload = require('electron-reload')
+const electronReload = require('electron-reload');
+const moment = require('moment');
 
 let data = [];
 
-const createWindow = () => {
+const createWindow = async () => {
+    try {
+        Estudiantes = await odoo.getUsers();
+    } catch (error) {
+        console.log("Ocurrió un error al conectarse con la base de datos");
+        //TODO Obtener usuarios de manera local
+    }
     const win = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 1366,
+        height: 768,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
         },
@@ -44,19 +34,26 @@ const createWindow = () => {
             data.push(input.key);
             if (data.at(-1) == 'Tab') {
                 data.pop();
+                data.pop();
                 data.shift();
-
                 data = data.join("");
 
                 // Cédula del estudiante
                 console.log(data);
                 const result = Estudiantes.find(e => e.cedula == data);
                 if (result) {
-                    win.webContents.send("datos", result)    
-                }else{
-                    win.webContents.send("no_data", null)    
+                    models.Ingresos.create({
+                        fecha: new Date(),
+                        nombres: result.nombres,
+                        apellidos: result.apellidos,
+                        cedula: result.cedula,
+                        email: result.email,
+                        usuario_id: result.id
+                    })
+                    win.webContents.send("datos", result)
+                } else {
+                    win.webContents.send("no_data", null)
                 }
-                
                 data = [];
             }
         }
@@ -64,11 +61,37 @@ const createWindow = () => {
     })
 
 
-
 };
 
 app.whenReady().then(() => {
-    createWindow();
+    createWindow().then(() => {
+        
+        setInterval(async () => {
+            let ingresos = await models.Ingresos.findAll({
+                where: {
+                    fecha: {
+                        [models.Op.between]: [moment().format("Y-MM-DD 00:00:00"), moment().format("Y-MM-DD 23:59:59")]
+                    }
+                }, raw: true, attributes: ["id", "usuario_id",
+                    [models.sequelize.fn("STRFTIME", "%Y-%m-%d %H:%M:%S", models.sequelize.col("fecha")), "fecha"]
+                ]
+            });
+
+            if (ingresos.length > 0) {
+                odoo.saveRecords(ingresos).then(res => {
+                    models.Ingresos.destroy({
+                        where: {
+                            id: ingresos.map(i => i.id)
+                        }
+                    })
+                }).catch(err => {
+                    // Ocurrió un error al conectarse a la base de datos
+                    console.log("Ocurrió un error al conectarse a la base de datos")
+                });
+            }
+        }, 5000);
+
+    });
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
