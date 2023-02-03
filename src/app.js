@@ -10,7 +10,6 @@ const odoo = require("./odoo-api.js")
 
 var Estudiantes = [];
 
-const electronReload = require('electron-reload');
 const moment = require('moment');
 
 let data = [];
@@ -28,10 +27,14 @@ const createWindow = async () => {
     const win = new BrowserWindow({
         width: 1366,
         height: 768,
+        fullscreen: true,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
         },
     });
+
+    win.setMenu(null)
+    win.setAlwaysOnTop(true)
 
     win.loadFile(path.join(__dirname, "views", "index.html"));
 
