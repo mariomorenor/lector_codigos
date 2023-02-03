@@ -1,9 +1,12 @@
-const { app, BrowserWindow, net } = require('electron');
+const { app, BrowserWindow } = require('electron');
 const path = require("path");
+
 require("./express.js")
 
 const models = require("./db");
 const odoo = require("./odoo-api.js")
+
+
 
 var Estudiantes = [];
 
@@ -15,6 +18,9 @@ let data = [];
 const createWindow = async () => {
     try {
         Estudiantes = await odoo.getUsers();
+        setInterval(async () => {
+            Estudiantes = await odoo.getUsers();
+        }, 600000);
     } catch (error) {
         console.log("Ocurrió un error al conectarse con la base de datos");
         //TODO Obtener usuarios de manera local
@@ -41,6 +47,7 @@ const createWindow = async () => {
                 // Cédula del estudiante
                 console.log(data);
                 const result = Estudiantes.find(e => e.cedula == data);
+
                 if (result) {
                     models.Ingresos.create({
                         fecha: new Date(),
@@ -65,7 +72,7 @@ const createWindow = async () => {
 
 app.whenReady().then(() => {
     createWindow().then(() => {
-        
+
         setInterval(async () => {
             let ingresos = await models.Ingresos.findAll({
                 where: {

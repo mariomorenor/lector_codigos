@@ -1,13 +1,27 @@
 const { default: axios } = require("axios");
+const Store = require("electron-store")
+const store = new Store({ name: "Configuracion" });
 
-const url = "http://localhost:8069/jsonrpc"
-
-
-const odoo = {
+var config = {
+    host: "http://localhost:8069/jsonrpc",
     username: "stecnico@pucesd.edu.ec",
     db: "pucesd",
     password: "825374200M@rio"
 }
+
+if (store.size == 0) {
+    store.set(config)
+} else {
+    config = store.get()
+}
+const url = config.host
+
+const odoo = {
+    username: config.username,
+    db: config.db,
+    password: config.password
+}
+
 
 async function json_rpc(url, method, params) {
     const data = {
