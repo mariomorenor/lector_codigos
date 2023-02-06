@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog } = require('electron');
 const path = require("path");
 
 require("./express.js")
@@ -23,6 +23,11 @@ const createWindow = async () => {
     } catch (error) {
         console.log("Ocurrió un error al conectarse con la base de datos");
         //TODO Obtener usuarios de manera local
+        dialog.showMessageBox({
+            title:"BD Error!",
+            message:`Ocurrió un error al conectarse a la base de datos: <<${error}>>`,
+            type:"error"
+        })
     }
     const win = new BrowserWindow({
         width: 1366,
